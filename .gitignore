@@ -1,0 +1,32 @@
+# --- System files ---
+.DS_Store
+Thumbs.db
+*.swp
+
+# --- IDE settings ---
+.vscode/
+.idea/
+*.sublime-project
+
+# --- Python (Backend) ---
+backend/.venv/
+backend/venv/
+**/__pycache__/
+**/*.py[cod]
+backend/.pytest_cache/
+backend/.ruff_cache/
+
+# --- Node/React (Frontend) ---
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/npm-debug.log*
+
+# --- Secrets and Config ---
+**/.env
+**/.env.local
+**/.env.*.local
+
+# --- Docker & Local Data ---
+.data/
+docker-volumes/

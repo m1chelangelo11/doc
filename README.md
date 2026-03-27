@@ -1,2 +1,49 @@
-# doc
-Doc is a tool made for simplifying and better understanding of documentation and papers.
+# DocStudy AI
+
+Application for learning from documentation and research papers using AI. It generates study plans and courses based on uploaded PDF files.
+
+## Tech Stack
+
+- Backend: FastAPI (Python)
+- Frontend: React + Vite (TypeScript)
+- Database: PostgreSQL and Vector DB (Qdrant/Chroma)
+- Infrastructure: Docker
+
+## Project Structure
+
+- /backend: API and AI logic
+- /frontend: User interface
+- docker-compose.yml: Container configuration
+
+## How to Run
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Steps
+
+1. Clone the repository.
+2. Create a .env file in the root folder with your API keys (e.g., OPENAI_API_KEY).
+3. Run the following command in the terminal:
+
+   ```bash
+   docker-compose up --build
+
+### Access Points
+
+Frontend: http://localhost:5173
+Backend API: http://localhost:8000
+API Docs (Swagger): http://localhost:8000/docs
+
+### Main Features
+
+Uploading PDF documents.
+AI-powered search (RAG).
+Automated generation of study plans.
+Progress tracking in courses.
+
+### License
+
+MIT

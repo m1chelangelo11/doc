@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from openrouter import send_query
+from .openrouter import send_query
 from fastapi.middleware.cors import CORSMiddleware
 
 class RequestContent(BaseModel):

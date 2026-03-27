@@ -1,6 +1,6 @@
-# DocStudy AI
+# Doc
 
-Application for learning from documentation and research papers using AI. It generates study plans and courses based on uploaded PDF files.
+Application for learning from documentation and research papers using AI. It generates study plans and courses based on uploaded files and links.
 
 ## Tech Stack
 
@@ -34,12 +34,14 @@ Application for learning from documentation and research papers using AI. It gen
 ### Access Points
 
 Frontend: http://localhost:5173
+
 Backend API: http://localhost:8000
+
 API Docs (Swagger): http://localhost:8000/docs
 
 ### Main Features
 
-Uploading PDF documents.
+Uploading documents and searching links.
 AI-powered search (RAG).
 Automated generation of study plans.
 Progress tracking in courses.

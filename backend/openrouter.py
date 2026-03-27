@@ -25,6 +25,7 @@ def send_query(user_input: str):
             } ]   
         })
     )
+    print(response.json())
     return response.json()["choices"][0]["message"]["content"]
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import os
 import json
 from pathlib import Path
 from dotenv import load_dotenv
+from typing import List, Dict, Any
 
 current_dir = Path(__file__).resolve().parent
 load_dotenv(current_dir / '.env')
@@ -11,7 +12,8 @@ URL="https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 MODEL = os.getenv("MODEL")
 
-def send_query(user_input: str):
+def send_query(user_input: List[Dict[str, Any]]):
+    print(user_input)
     response = requests.post(
         url = URL,
         headers = {
@@ -22,9 +24,17 @@ def send_query(user_input: str):
             "messages": [ {
                 "role": "user",
                 "content": user_input
-            } ]   
+            } ],
+            "plugins": [ {
+                "id": "file-parser",
+                "pdf": {
+                    "engine": 'cloudflare-ai',
+                },
+            } ],  
         })
     )
+
+    print(response.json())
     return response.json()["choices"][0]["message"]["content"]
 
 if __name__ == "__main__":

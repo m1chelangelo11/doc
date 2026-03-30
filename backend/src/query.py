@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile
 from pydantic import BaseModel
 from .openrouter import send_query
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List, Dict, Any
 
 class RequestContent(BaseModel):
-    content: str
+    content: List[Dict[str, Any]]
 
 app = FastAPI()
 
@@ -22,4 +23,3 @@ app.add_middleware(
 async def query(request_content: RequestContent):
     result = send_query(request_content.content)
     return result
-

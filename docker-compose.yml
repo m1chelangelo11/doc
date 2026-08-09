@@ -9,6 +9,7 @@ services:
       - WATCHFILES_FORCE_POLLING=true
     volumes:
       - ./backend:/app
+      - /app/.venv
   frontend:
     build: ./frontend
     ports: 

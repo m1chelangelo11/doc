@@ -46,7 +46,7 @@ async def parse_file(file: UploadFile):
     try:
         result = md.convert_stream(binary_stream, file_extension=extension)
         
-    except Exception:
+    except ValueError:
         raise HTTPException(status_code=400, detail="Wrong file type")
 
     if result.text_content.strip() == "":

@@ -1,41 +1,45 @@
-import requests
-import os
 import json
+import os
 from pathlib import Path
+from typing import Any
+
+import requests
 from dotenv import load_dotenv
-from typing import List, Dict, Any
 
 current_dir = Path(__file__).resolve().parent
-load_dotenv(current_dir / '.env')
+load_dotenv(current_dir / ".env")
 
-URL="https://openrouter.ai/api/v1/chat/completions"
+URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 MODEL = os.getenv("MODEL")
 
-def send_query(user_input: List[Dict[str, Any]]):
+
+def send_query(user_input: list[dict[str, Any]]):
     print(user_input)
     response = requests.post(
-        url = URL,
-        headers = {
+        url=URL,
+        headers={
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         },
-        data = json.dumps({
-            "model": MODEL,
-            "messages": [ {
-                "role": "user",
-                "content": user_input
-            } ],
-            "plugins": [ {
-                "id": "file-parser",
-                "pdf": {
-                    "engine": 'cloudflare-ai',
-                },
-            } ],  
-        })
+        data=json.dumps(
+            {
+                "model": MODEL,
+                "messages": [{"role": "user", "content": user_input}],
+                "plugins": [
+                    {
+                        "id": "file-parser",
+                        "pdf": {
+                            "engine": "cloudflare-ai",
+                        },
+                    }
+                ],
+            }
+        ),
     )
 
     print(response.json())
     return response.json()["choices"][0]["message"]["content"]
+
 
 if __name__ == "__main__":
     result = send_query("hello")

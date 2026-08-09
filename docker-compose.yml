@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build: ./backend
@@ -7,7 +5,14 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+    volumes:
+      - ./backend:/app
   frontend:
     build: ./frontend
     ports: 
       - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules

@@ -29,6 +29,10 @@ export default function useFileUpload() {
       "application/vnd.openxmlformats-officedocument",
     );
 
+    const isTextFile =
+      file_data.type.startsWith("text/") ||
+      file_data.name.match(/\.(md|csv|json)$/i);
+
     if (isOfficeFile) {
       const formData = new FormData();
       formData.append("file", file_data);
@@ -48,6 +52,11 @@ export default function useFileUpload() {
       updateContentType("text");
       updateFileData(data.filedata);
       updateFileName(data.filename);
+    } else if (isTextFile) {
+      const textContent = await file_data.text();
+      updateContentType("text");
+      updateFileData(textContent);
+      updateFileName(file_data.name);
     } else {
       const base64Data = await readFile(file_data);
       updateContentType("base64");

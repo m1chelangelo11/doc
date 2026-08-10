@@ -15,6 +15,7 @@ backend/venv/
 **/*.py[cod]
 backend/.pytest_cache/
 backend/.ruff_cache/
+backend/.chroma/
 
 # --- Node/React (Frontend) ---
 frontend/node_modules/

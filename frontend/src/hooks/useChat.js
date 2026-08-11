@@ -9,31 +9,22 @@ export default function useChat(fileUpload) {
 
     const content = [{ type: "text", text: userInput }];
 
-    if (fileUpload.fileData) {
-      if (fileUpload.contentType === "base64") {
-        content.push({
-          type: "file",
-          file: {
-            filename: fileUpload.fileName,
-            file_data: fileUpload.fileData,
-          },
-        });
-      } else if (fileUpload.contentType === "text") {
-        content.push({
-          type: "text",
-          text: `\n\n --- ${fileUpload.fileName} content --- \n ${fileUpload.fileData} \n ---------------------------- \n`,
-        });
-      }
+    for (const image of fileUpload.images) {
+      content.push({
+        type: "file",
+        file: {
+          filename: image.filename,
+          file_data: image.data,
+        },
+      });
     }
 
     setUserInput("");
-    fileUpload.updateFileData(null);
-    fileUpload.updateContentType(null);
 
     const response = await fetch("http://localhost:8000/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, use_rag: fileUpload.useRag }),
     });
 
     const data = await response.json();

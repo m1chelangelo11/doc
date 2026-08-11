@@ -13,64 +13,108 @@ const readFile = (file) => {
 
 export default function useFileUpload() {
   const fileInput = useRef(null);
-  const [fileData, updateFileData] = useState(null);
-  const [fileName, updateFileName] = useState(null);
-  const [contentType, updateContentType] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [images, setImages] = useState([]);
+  const [useRag, setUseRag] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handleFile(file_data) {
+    const isImage = file_data.type.startsWith("image/");
+
+    if (isImage) {
+      try {
+        const base64data = await readFile(file_data);
+
+        const newImage = {
+          id: crypto.randomUUID(),
+          filename: file_data.name,
+          type: file_data.type,
+          data: base64data,
+        };
+
+        setImages((prev) => [...prev, newImage]);
+      } catch (error) {
+        console.error("Error while processing image: ", error);
+        setError("Couldn't process file. Try Again.");
+      }
+    } else {
+      try {
+        const formData = new FormData();
+        formData.append("file", file_data);
+
+        const response = await fetch("http://localhost:8000/parse_file", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.detail || `Error while parsing file: ${response.status}`,
+          );
+        }
+
+        const data = await response.json();
+
+        const newDocument = {
+          file_uuid: data.file_uuid,
+          filename: data.filename,
+          type: file_data.type,
+        };
+
+        setDocuments((prev) => [...prev, newDocument]);
+      } catch (error) {
+        console.error("Error while indexing file: ", error);
+        setError("Couldn't process file. Try Again.");
+      }
+    }
+  }
 
   async function handleUpload() {
-    const file_data = fileInput.current.files[0];
+    const files_data = fileInput.current.files;
 
-    if (!file_data) {
+    if (files_data.length === 0) {
       console.error("No file selected");
       return;
     }
 
-    const isOfficeFile = file_data.type.includes(
-      "application/vnd.openxmlformats-officedocument",
-    );
-
-    const isTextFile =
-      file_data.type.startsWith("text/") ||
-      file_data.name.match(/\.(md|csv|json)$/i);
-
-    if (isOfficeFile) {
-      const formData = new FormData();
-      formData.append("file", file_data);
-
-      const response = await fetch("http://localhost:8000/parse_file", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Backend error: ", errorData.detail || "Unknown error");
-        return;
-      }
-
-      const data = await response.json();
-      updateContentType("text");
-      updateFileData(data.filedata);
-      updateFileName(data.filename);
-    } else if (isTextFile) {
-      const textContent = await file_data.text();
-      updateContentType("text");
-      updateFileData(textContent);
-      updateFileName(file_data.name);
-    } else {
-      const base64Data = await readFile(file_data);
-      updateContentType("base64");
-      updateFileData(base64Data);
-      updateFileName(file_data.name);
+    for (const file_data of files_data) {
+      await handleFile(file_data);
     }
   }
+
+  async function removeDocument(file_uuid) {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/delete_file/${file_uuid}`,
+        { method: "DELETE" },
+      );
+      if (response.ok) {
+        setDocuments((prev) =>
+          prev.filter((doc) => doc.file_uuid !== file_uuid),
+        );
+      } else {
+        console.error(`Couldn't delete file. Code: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Network error while deleting document: ", error);
+      setError("Couldn't process file. Try Again.");
+    }
+  }
+
+  async function removeImage(id) {
+    setImages((prev) => prev.filter((img) => img.id !== id));
+  }
+
   return {
-    fileName,
-    fileData,
     fileInput,
-    contentType,
+    documents,
+    images,
+    useRag,
+    setUseRag,
     handleUpload,
-    updateFileData,
-    updateContentType,
+    removeDocument,
+    removeImage,
+    error,
   };
 }

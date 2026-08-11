@@ -74,11 +74,35 @@ def retrieve_chunks(query: str, n_results: int = 4) -> list[dict[str, any]]:
     return formatted_results
 
 
+def delete_document(file_uuid: str) -> bool:
+    """
+    Checks if a document is in the vector store and
+    deletes all chunks of file with a specified uuid.
+
+    Args:
+        file_uuid (str): file's unique identifier
+
+    Returns:
+        bool: returns True if executed correctly or False if file is not found
+    """
+
+    existing_data = collection.get(where={"file_uuid": file_uuid}, include=[])
+
+    if not existing_data or len(existing_data.get("ids", [])) == 0:
+        return False
+
+    collection.delete(where={"file_uuid": file_uuid})
+
+    return True
+
+
 if __name__ == "__main__":
     query = "Czym jest architektura RAG i jakie problemy rozwiązuje?"
 
     found = retrieve_chunks(query)
     for i, result in enumerate(found, 1):
         print(f"\n Result: {i} | Distance: {result['distance']:.4f}")
-        print(f"File: {result['metadata']['filename']} | Chunk: {result['metadata']['chunk_index']}")
+        print(
+            f"File: {result['metadata']['filename']} | Chunk: {result['metadata']['chunk_index']}"
+        )
         print(f"Text: {result['text'][:150]}")

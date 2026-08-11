@@ -10,11 +10,12 @@ from markitdown import MarkItDown
 from pydantic import BaseModel
 
 from .openrouter import send_query
-from .vectorstore import add_to_collection
+from .vectorstore import add_to_collection, collection, delete_document, retrieve_chunks
 
 
 class RequestContent(BaseModel):
     content: list[dict[str, Any]]
+    use_rag: bool = False
 
 
 app = FastAPI()
@@ -34,7 +35,39 @@ md = MarkItDown()
 
 @app.post("/query")
 async def query(request_content: RequestContent):
-    result = send_query(request_content.content)
+    messages = request_content.content.copy()
+
+    if request_content.use_rag:
+        last_message = ""
+        for item in reversed(messages):
+            if item.get("type") == "text":
+                last_message = item.get("text", "")
+                break
+
+        if collection.count() > 0:
+            found_chunks = retrieve_chunks(query=last_message)
+
+            if found_chunks:
+                context_texts = []
+                for chunk in found_chunks:
+                    filename = chunk["metadata"].get("filename", "Unknown document")
+                    context_texts.append(
+                        f"--- Fragment of the document: {filename} ---\n{chunk['text']}"
+                    )
+
+                full_context = "\n\n".join(context_texts)
+
+                system_prompt = (
+                    "You are an AI assistant and teacher. Answer the user's questions based on "
+                    "the fragments of the documents below. If there is no aswer for the question in the documents "
+                    "tell about it straight and answer using your basic knowledge.\n\n"
+                    f"KNOWLEDGE BASE DOCUMENTS:\n{full_context}"
+                )
+
+                messages.insert(0, {"type": "text", "text": system_prompt})
+
+    result = send_query(messages)
+
     return result
 
 
@@ -61,15 +94,23 @@ async def parse_file(file: UploadFile):
                 documents = SimpleDirectoryReader(input_files=[tmp_path]).load_data()
 
                 text_content = "\n".join([doc.text for doc in documents])
-                
+
             finally:
                 os.remove(tmp_path)
 
-        elif file.content_type.startswith("application/vnd.openxmlformats-officedocument") or extension in [".docx", ".xlsx", ".pptx"]:
+        elif file.content_type.startswith(
+            "application/vnd.openxmlformats-officedocument"
+        ) or extension in [".docx", ".xlsx", ".pptx"]:
             result = md.convert_stream(binary_stream, file_extension=extension)
             text_content = result.text_content
 
-        elif file.content_type.startswith("text/") or extension in [".md", ".txt", ".html", ".csv", ".json"]:
+        elif file.content_type.startswith("text/") or extension in [
+            ".md",
+            ".txt",
+            ".html",
+            ".csv",
+            ".json",
+        ]:
             text_content = file_bytes.decode()
 
         else:
@@ -77,14 +118,26 @@ async def parse_file(file: UploadFile):
 
     except ValueError:
         raise HTTPException(status_code=400, detail="Wrong file type")
-    except Exception as e: # noqa: BLE001
+    except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=f"Failed to parse file: {e!s}")
 
     if not text_content or text_content.strip() == "":
-        raise HTTPException(status_code=400, detail="Empty file or no readable text found")
+        raise HTTPException(
+            status_code=400, detail="Empty file or no readable text found"
+        )
 
     file_uuid = add_to_collection(text_content, file.filename)
 
+    return {"filename": file.filename, "file_uuid": file_uuid}
 
-    return {"filename": file.filename,
-            "file_uuid": file_uuid}
+
+@app.delete("/delete_file/{file_uuid}")
+async def delete_file(file_uuid: str):
+    is_deleted = delete_document(file_uuid)
+
+    if not is_deleted:
+        raise HTTPException(
+            status_code=404, detail=f"File with UUID {file_uuid} was not found"
+        )
+
+    return {"message": "File deleted successfully", "file_uuid": file_uuid}

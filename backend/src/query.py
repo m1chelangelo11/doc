@@ -13,8 +13,12 @@ from .openrouter import send_query
 from .vectorstore import add_to_collection, collection, delete_document, retrieve_chunks
 
 
+class Message(BaseModel):
+    role: str
+    content: str | list[dict[str, Any]]
+
 class RequestContent(BaseModel):
-    content: list[dict[str, Any]]
+    messages: list[Message]
     use_rag: bool = False
 
 
@@ -35,17 +39,26 @@ md = MarkItDown()
 
 @app.post("/query")
 async def query(request_content: RequestContent):
-    messages = request_content.content.copy()
+    messages_list = [msg.model_dump() for msg in request_content.messages]
+
+    if not messages_list:
+        raise HTTPException(status_code=400, detail="Brak wiadomości w zapytaniu")
 
     if request_content.use_rag:
-        last_message = ""
-        for item in reversed(messages):
-            if item.get("type") == "text":
-                last_message = item.get("text", "")
-                break
+        last_message = messages_list[-1]
+        last_user_text = ""
+
+        if isinstance(last_message["content"], str):
+            last_user_text = last_message["content"]
+
+        elif isinstance(last_message["content"], list):
+            for block in last_message["content"]:
+                if block.get("type") == "text":
+                    last_user_text = block.get("text", "")
+                    break
 
         if collection.count() > 0:
-            found_chunks = retrieve_chunks(query=last_message)
+            found_chunks = retrieve_chunks(query=last_user_text)
 
             if found_chunks:
                 context_texts = []
@@ -64,9 +77,9 @@ async def query(request_content: RequestContent):
                     f"KNOWLEDGE BASE DOCUMENTS:\n{full_context}"
                 )
 
-                messages.insert(0, {"type": "text", "text": system_prompt})
+                messages_list.insert(0, {"role": "system", "content": system_prompt})
 
-    result = send_query(messages)
+    result = send_query(messages_list)
 
     return result
 

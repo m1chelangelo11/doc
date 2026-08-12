@@ -11,8 +11,15 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@tailwindcss/typography": "github:tailwindcss/typography",
+    "@tailwindcss/vite": "^4.3.3",
+    "lucide-react": "^1.31.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.1",
+    "remark-gfm": "^4.0.1",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

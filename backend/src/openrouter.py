@@ -16,7 +16,7 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
 EMBEDDING_URL = "https://openrouter.ai/api/v1/embeddings"
 
 
-def send_query(user_input: list[dict[str, Any]]):
+def send_query(messages: list[dict[str, Any]]):
     response = requests.post(
         url=URL,
         headers={
@@ -25,7 +25,7 @@ def send_query(user_input: list[dict[str, Any]]):
         data=json.dumps(
             {
                 "model": MODEL,
-                "messages": [{"role": "user", "content": user_input}],
+                "messages": messages,
                 "plugins": [
                     {
                         "id": "file-parser",
@@ -38,6 +38,7 @@ def send_query(user_input: list[dict[str, Any]]):
         ),
     )
 
+    print(response.json())
     return response.json()["choices"][0]["message"]["content"]
 
 

@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-paper: #FAFAF8;
+  --color-ink: #1C1B19;
+  --color-line: #E4E2DC;
+  --color-accent: #2B5D4F;
+  --color-warn: #B3542B;
+}
+
+body {
+  background-color: var(--color-paper);
+  min-height: 100vh;
+}

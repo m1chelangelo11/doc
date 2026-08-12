@@ -109,7 +109,9 @@ export default function useFileUpload() {
   return {
     fileInput,
     documents,
+    setDocuments,
     images,
+    setImages,
     useRag,
     setUseRag,
     handleUpload,

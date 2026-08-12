@@ -1,9 +1,67 @@
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import AttachmentCard from "./AttachmentCard";
+import getFileLabel from "../utils/fileLabel";
+
 function MessageHistory({ messageHistory }) {
   return (
-    <div>
-      {messageHistory.map((message, index) => (
-        <p key={index}> {message} </p>
-      ))}
+    <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto w-full flex-1 overflow-y-auto">
+      {messageHistory.map((message, index) =>
+        message.role === "user" ? (
+          <div
+            key={index}
+            className="self-end max-w-[75%] rounded-md px-4 py-2 bg-accent text-paper"
+          >
+            {message.text}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {message.documents.map((doc) => (
+                <AttachmentCard
+                  key={doc.file_uuid}
+                  name={doc.filename}
+                  typeLabel={getFileLabel(doc.type)}
+                />
+              ))}
+              {message.images.map((img) => (
+                <AttachmentCard
+                  key={img.id}
+                  name={img.filename}
+                  thumbnail={img.data}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div key={index} className="text-ink prose prose-sm max-w-none">
+            <Markdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code(props) {
+                  const { children, className, ...rest } = props;
+                  const match = /language-(\w+)/.exec(className || "");
+                  return match ? (
+                    <SyntaxHighlighter
+                      {...rest}
+                      language={match[1]}
+                      style={oneDark}
+                      PreTag="div"
+                    >
+                      {String(children).replace(/\n$/, "")}
+                    </SyntaxHighlighter>
+                  ) : (
+                    <code {...rest} className={className}>
+                      {children}
+                    </code>
+                  );
+                },
+              }}
+            >
+              {message.text}
+            </Markdown>
+          </div>
+        ),
+      )}
     </div>
   );
 }
